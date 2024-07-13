@@ -203,8 +203,8 @@ cmake -S . -B $WebKitBuild `
     "-DCMAKE_CXX_COMPILER=clang-cl" `
     "-DCMAKE_C_FLAGS_RELEASE=/Zi /O2 /Ob2 /DNDEBUG" `
     "-DCMAKE_CXX_FLAGS_RELEASE=/Zi /O2 /Ob2 /DNDEBUG" `
-    "-DCMAKE_C_FLAGS_DEBUG=/Zi /FS /O0 /Ob0" `
-    "-DCMAKE_CXX_FLAGS_DEBUG=/Zi /FS /O0 /Ob0" `
+    "-DCMAKE_C_FLAGS_DEBUG=/Z7 /Od /Ob0" `
+    "-DCMAKE_CXX_FLAGS_DEBUG=/Z7 /Od /Ob0" `
     -DENABLE_REMOTE_INSPECTOR=ON `
     "-DCMAKE_MSVC_RUNTIME_LIBRARY=${CmakeMsvcRuntimeLibrary}" `
     -G Ninja
