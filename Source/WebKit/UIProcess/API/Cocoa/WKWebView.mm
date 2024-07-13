@@ -1272,7 +1272,10 @@ static WKMediaPlaybackState toWKMediaPlaybackState(WebKit::MediaPlaybackState me
 #else
     auto useIntrinsicDeviceScaleFactor = [[_customContentView class] web_requiresCustomSnapshotting];
 
+ALLOW_DEPRECATED_DECLARATIONS_BEGIN
+    // FIXME: <rdar://131638772> UIScreen.mainScreen is deprecated.
     CGFloat deviceScale = useIntrinsicDeviceScaleFactor ? UIScreen.mainScreen.scale : _page->deviceScaleFactor();
+ALLOW_DEPRECATED_DECLARATIONS_END
     CGFloat imageWidth = useIntrinsicDeviceScaleFactor ? snapshotWidth : snapshotWidth * deviceScale;
     RetainPtr<WKWebView> strongSelf = self;
     BOOL afterScreenUpdates = snapshotConfiguration && snapshotConfiguration.afterScreenUpdates;
@@ -2076,14 +2079,19 @@ static _WKSelectionAttributes selectionAttributes(const WebKit::EditorState& edi
 
 #pragma mark - WTWritingToolsDelegate conformance
 
-- (PlatformWritingToolsAllowedInputOptions)writingToolsAllowedInputOptions {
+- (PlatformWritingToolsResultOptions)allowedWritingToolsResultOptions
+{
     auto& editorState = _page->editorState();
     if (editorState.isContentEditable && !editorState.isContentRichlyEditable)
-        return PlatformWritingToolsAllowedInputOptionsPlainText;
+        return PlatformWritingToolsResultPlainText;
 
-    PlatformWritingToolsAllowedInputOptions listOption = (PlatformWritingToolsAllowedInputOptions)(1 << 2);
+    return PlatformWritingToolsResultPlainText | PlatformWritingToolsResultRichText | PlatformWritingToolsResultList | PlatformWritingToolsResultTable;
+}
 
-    return PlatformWritingToolsAllowedInputOptionsPlainText | PlatformWritingToolsAllowedInputOptionsRichText | listOption | PlatformWritingToolsAllowedInputOptionsTable;
+// FIXME: (rdar://130540028) Remove uses of the old WritingToolsAllowedInputOptions API in favor of the new WritingToolsResultOptions API, and remove staging.
+- (PlatformWritingToolsResultOptions)writingToolsAllowedInputOptions
+{
+    return [self allowedWritingToolsResultOptions];
 }
 
 - (PlatformWritingToolsBehavior)writingToolsBehavior
@@ -2835,6 +2843,11 @@ static RetainPtr<NSArray> wkTextManipulationErrors(NSArray<_WKTextManipulationIt
 #endif
 }
 
+- (BOOL)_canEnterFullscreen
+{
+    return _page->canEnterFullscreen();
+}
+
 - (BOOL)_isPictureInPictureActive
 {
 #if HAVE(TOUCH_BAR) && ENABLE(WEB_PLAYBACK_CONTROLS_MANAGER)
@@ -2877,6 +2890,12 @@ static RetainPtr<NSArray> wkTextManipulationErrors(NSArray<_WKTextManipulationIt
 #if HAVE(TOUCH_BAR) && ENABLE(WEB_PLAYBACK_CONTROLS_MANAGER)
     _impl->toggleInWindowFullscreen();
 #endif
+}
+
+- (void)_enterFullscreen
+{
+    if (RefPtr page = _page)
+        page->enterFullscreen();
 }
 
 #if ENABLE(ACCESSIBILITY_ANIMATION_CONTROL)

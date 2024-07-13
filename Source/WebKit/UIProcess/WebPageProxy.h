@@ -2156,6 +2156,9 @@ public:
 #endif
 
 #if ENABLE(VIDEO_PRESENTATION_MODE)
+    bool canEnterFullscreen();
+    void enterFullscreen();
+
     void failedToEnterFullscreen(PlaybackSessionContextIdentifier);
     void didEnterFullscreen(PlaybackSessionContextIdentifier);
     void didExitFullscreen(PlaybackSessionContextIdentifier);
@@ -2940,6 +2943,7 @@ private:
     void handleSynchronousMessage(IPC::Connection&, const String& messageName, const UserData& messageBody, CompletionHandler<void(UserData&&)>&&);
 
     void viewIsBecomingVisible();
+    void viewIsBecomingInvisible();
 
     void stopAllURLSchemeTasks(WebProcessProxy* = nullptr);
 

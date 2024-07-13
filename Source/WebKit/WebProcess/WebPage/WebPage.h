@@ -70,6 +70,7 @@
 #include <WebCore/MediaControlsContextMenuItem.h>
 #include <WebCore/MediaKeySystemRequest.h>
 #include <WebCore/NowPlayingMetadataObserver.h>
+#include <WebCore/OwnerPermissionsPolicyData.h>
 #include <WebCore/PageIdentifier.h>
 #include <WebCore/PageOverlay.h>
 #include <WebCore/PlatformLayerIdentifier.h>
@@ -1014,6 +1015,9 @@ public:
         Printing                = 1 << 4,
         ProcessSwap             = 1 << 5,
         SwipeAnimation          = 1 << 6,
+#if ENABLE(QUICKLOOK_FULLSCREEN)
+        OutOfProcessFullscreen  = 1 << 7,
+#endif
     };
     void freezeLayerTree(LayerTreeFreezeReason);
     void unfreezeLayerTree(LayerTreeFreezeReason);
@@ -1797,6 +1801,10 @@ public:
 
     OptionSet<LayerTreeFreezeReason> layerTreeFreezeReasons() const { return m_layerTreeFreezeReasons; }
 
+#if ENABLE(CONTEXT_MENUS)
+    void showContextMenuFromFrame(const WebCore::FrameIdentifier&, const ContextMenuContextData&, const UserData&);
+#endif
+
 private:
     WebPage(WebCore::PageIdentifier, WebPageCreationParameters&&);
 
@@ -2331,7 +2339,7 @@ private:
 
     void frameNameWasChangedInAnotherProcess(WebCore::FrameIdentifier, const String& frameName);
 
-    WebCore::PageIdentifier m_identifier;
+    const WebCore::PageIdentifier m_identifier;
 
     RefPtr<WebCore::Page> m_page;
 
@@ -2591,6 +2599,7 @@ private:
     std::optional<WebCore::FloatSize> m_viewportSizeForCSSViewportUnits;
 
     bool m_userIsInteracting { false };
+    bool m_hasEverDisplayedContextMenu { false };
 
 #if HAVE(TOUCH_BAR)
     bool m_hasEverFocusedElementDueToUserInteractionSincePageTransition { false };

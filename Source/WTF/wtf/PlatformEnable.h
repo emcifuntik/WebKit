@@ -82,7 +82,7 @@
 
 /* --------- Windows port --------- */
 #if PLATFORM(WIN)
-#include <wtf/PlatformEnableWinCairo.h>
+#include <wtf/PlatformEnableWin.h>
 #endif
 
 /* --------- PlayStation port --------- */

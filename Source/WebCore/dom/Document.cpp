@@ -3540,7 +3540,7 @@ ExceptionOr<void> Document::open(Document* entryDocument)
     if (entryDocument && !entryDocument->securityOrigin().isSameOriginAs(securityOrigin()))
         return Exception { ExceptionCode::SecurityError };
 
-    if (m_ignoreOpensDuringUnloadCount)
+    if (m_unloadCounter)
         return { };
 
     if (m_activeParserWasAborted)
@@ -3942,7 +3942,7 @@ ExceptionOr<void> Document::write(Document* entryDocument, SegmentedString&& tex
         return { };
 
     bool hasInsertionPoint = m_parser && m_parser->hasInsertionPoint();
-    if (!hasInsertionPoint && (m_ignoreOpensDuringUnloadCount || m_ignoreDestructiveWriteCount))
+    if (!hasInsertionPoint && (m_unloadCounter || m_ignoreDestructiveWriteCount))
         return { };
 
     if (!hasInsertionPoint) {
@@ -6324,6 +6324,14 @@ HTMLFrameOwnerElement* Document::ownerElement() const
     return frame()->ownerElement();
 }
 
+std::optional<OwnerPermissionsPolicyData> Document::ownerPermissionsPolicy() const
+{
+    if (WeakPtr currentFrame = frame())
+        return currentFrame->ownerPermissionsPolicy();
+
+    return std::nullopt;
+}
+
 // https://html.spec.whatwg.org/#cookie-averse-document-object
 bool Document::isCookieAverse() const
 {
@@ -7238,12 +7246,6 @@ Ref<HTMLCollection> Document::applets()
 
 Ref<HTMLCollection> Document::embeds()
 {
-    return ensureCachedCollection<CollectionType::DocEmbeds>();
-}
-
-Ref<HTMLCollection> Document::plugins()
-{
-    // This is an alias for embeds() required for the JS DOM bindings.
     return ensureCachedCollection<CollectionType::DocEmbeds>();
 }
 
@@ -10716,7 +10718,7 @@ PermissionsPolicy Document::permissionsPolicy() const
     // because Document may not be set on Frame yet, and it would affect the computation
     // of PermissionsPolicy.
     if (!m_permissionsPolicy)
-        m_permissionsPolicy = makeUnique<PermissionsPolicy>(ownerElement(), securityOrigin().data());
+        m_permissionsPolicy = makeUnique<PermissionsPolicy>(*this);
 
     return *m_permissionsPolicy;
 }

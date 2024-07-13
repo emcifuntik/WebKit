@@ -273,6 +273,7 @@
 #if PLATFORM(COCOA)
 #include "InsertTextOptions.h"
 #include "NetworkIssueReporter.h"
+#include "PlaybackSessionInterfaceLMK.h"
 #include "RemoteLayerTreeDrawingAreaProxy.h"
 #include "RemoteLayerTreeScrollingPerformanceData.h"
 #include "UserMediaCaptureManagerProxy.h"
@@ -283,6 +284,9 @@
 #include <WebCore/AttributedString.h>
 #include <WebCore/CoreAudioCaptureDeviceManager.h>
 #include <WebCore/LegacyWebArchive.h>
+#include <WebCore/NullPlaybackSessionInterface.h>
+#include <WebCore/PlaybackSessionInterfaceAVKit.h>
+#include <WebCore/PlaybackSessionInterfaceMac.h>
 #include <WebCore/RunLoopObserver.h>
 #include <WebCore/SystemBattery.h>
 #include <objc/runtime.h>
@@ -1862,6 +1866,7 @@ void WebPageProxy::loadRequestWithNavigationShared(Ref<WebProcessProxy>&& proces
     loadParameters.lockBackForwardList = navigation.lockBackForwardList();
     loadParameters.clientRedirectSourceForHistory = navigation.clientRedirectSourceForHistory();
     loadParameters.effectiveSandboxFlags = navigation.effectiveSandboxFlags();
+    loadParameters.ownerPermissionsPolicy = navigation.ownerPermissionsPolicy();
     loadParameters.isNavigatingToAppBoundDomain = isNavigatingToAppBoundDomain;
     loadParameters.existingNetworkResourceLoadIdentifierToResume = existingNetworkResourceLoadIdentifierToResume;
     loadParameters.advancedPrivacyProtections = navigation.originatorAdvancedPrivacyProtections();
@@ -2796,7 +2801,7 @@ void WebPageProxy::dispatchActivityStateChange()
         if (isViewVisible())
             viewIsBecomingVisible();
         else
-            protectedLegacyMainFrameProcess()->pageIsBecomingInvisible(internals().webPageID);
+            viewIsBecomingInvisible();
     }
 
 #if PLATFORM(MAC) || PLATFORM(MACCATALYST)
@@ -4506,6 +4511,7 @@ void WebPageProxy::receivedNavigationActionPolicyDecision(WebProcessProxy& proce
             loadParameters.frameIdentifier = frame->frameID();
             loadParameters.isRequestFromClientOrUserInput = navigationAction->data().isRequestFromClientOrUserInput;
             loadParameters.navigationID = navigation->navigationID();
+            loadParameters.ownerPermissionsPolicy = navigation->ownerPermissionsPolicy();
             processNavigatingTo->send(Messages::WebPage::LoadRequest(WTFMove(loadParameters)), webPageIDInMainFrameProcess());
         }
 
@@ -4678,7 +4684,6 @@ void WebPageProxy::continueNavigationInNewProcess(API::Navigation& navigation, W
     Site navigationSite { navigation.currentRequest().url() };
 
     if (preferences().siteIsolationEnabled() && (!frame.isMainFrame() || newProcess->coreProcessIdentifier() == frame.process().coreProcessIdentifier())) {
-
         // FIXME: Add more parameters as appropriate. <rdar://116200985>
         LoadParameters loadParameters;
         loadParameters.request = navigation.currentRequest();
@@ -4687,6 +4692,7 @@ void WebPageProxy::continueNavigationInNewProcess(API::Navigation& navigation, W
         loadParameters.isRequestFromClientOrUserInput = navigation.isRequestFromClientOrUserInput();
         loadParameters.navigationID = navigation.navigationID();
         loadParameters.lockBackForwardList = frame.hasPendingBackForwardItem() ? LockBackForwardList::Yes : LockBackForwardList::No;
+        loadParameters.ownerPermissionsPolicy = navigation.lastNavigationAction().ownerPermissionsPolicy;
 
         Ref processNavigatingFrom = frame.isMainFrame() && m_provisionalPage ? m_provisionalPage->process() : frame.process();
         frame.setHasPendingBackForwardItem(frame.parentFrame() && frame.parentFrame()->process() == processNavigatingFrom);
@@ -6793,6 +6799,8 @@ void WebPageProxy::viewIsBecomingVisible()
 {
     WEBPAGEPROXY_RELEASE_LOG(ViewState, "viewIsBecomingVisible:");
     protectedLegacyMainFrameProcess()->markProcessAsRecentlyUsed();
+    if (auto* drawingAreaProxy = drawingArea())
+        drawingAreaProxy->viewIsBecomingVisible();
 #if ENABLE(MEDIA_STREAM)
     if (m_userMediaPermissionRequestManager)
         m_userMediaPermissionRequestManager->viewIsBecomingVisible();
@@ -6800,6 +6808,14 @@ void WebPageProxy::viewIsBecomingVisible()
 
     Ref protectedPageClient { pageClient() };
     protectedPageClient->viewIsBecomingVisible();
+}
+
+void WebPageProxy::viewIsBecomingInvisible()
+{
+    WEBPAGEPROXY_RELEASE_LOG(ViewState, "viewIsBecomingInvisible:");
+    protectedLegacyMainFrameProcess()->pageIsBecomingInvisible(internals().webPageID);
+    if (auto* drawingAreaProxy = drawingArea())
+        drawingAreaProxy->viewIsBecomingInvisible();
 }
 
 void WebPageProxy::processIsNoLongerAssociatedWithPage(WebProcessProxy& process)
@@ -7169,6 +7185,14 @@ void WebPageProxy::decidePolicyForNavigationAction(Ref<WebProcessProxy>&& proces
                 auto transaction = internals().pageLoadState.transaction();
                 internals().pageLoadState.setPendingAPIRequest(transaction, { navigation->navigationID(), safeBrowsingWarning->url().string() });
                 internals().pageLoadState.commitChanges();
+            }
+
+            if (!frame->isMainFrame()) {
+                auto error = interruptedForPolicyChangeError(navigation->currentRequest());
+                m_navigationClient->didFailProvisionalNavigationWithError(*this, FrameInfoData { frameInfo }, navigation.get(), requestURL, error, nullptr);
+                WEBPAGEPROXY_RELEASE_LOG(Loading, "decidePolicyForNavigationAction: Ignoring request to load subframe resource because Safe Browsing found a match.");
+                completionHandlerWrapper(PolicyAction::Ignore);
+                return;
             }
 
             auto transaction = internals().pageLoadState.transaction();
@@ -7697,6 +7721,30 @@ void WebPageProxy::fullscreenMayReturnToInline()
 }
 
 #if ENABLE(VIDEO_PRESENTATION_MODE)
+
+bool WebPageProxy::canEnterFullscreen()
+{
+    if (RefPtr playbackSessionManager = m_playbackSessionManager)
+        return playbackSessionManager->hasControlsManagerInterface();
+    return false;
+}
+
+void WebPageProxy::enterFullscreen()
+{
+    RefPtr playbackSessionManager = m_playbackSessionManager;
+    if (!playbackSessionManager)
+        return;
+
+    RefPtr controlsManagerInterface = playbackSessionManager->controlsManagerInterface();
+    if (!controlsManagerInterface)
+        return;
+
+    CheckedPtr playbackSessionModel = controlsManagerInterface->playbackSessionModel();
+    if (!playbackSessionModel)
+        return;
+
+    playbackSessionModel->enterFullscreen();
+}
 
 void WebPageProxy::didEnterFullscreen(PlaybackSessionContextIdentifier identifier)
 {
