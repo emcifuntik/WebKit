@@ -252,7 +252,8 @@ $null = mkdir -ErrorAction SilentlyContinue $output/include
 $null = mkdir -ErrorAction SilentlyContinue $output/include/JavaScriptCore
 $null = mkdir -ErrorAction SilentlyContinue $output/include/wtf
 
-Copy-Item $WebKitBuild/cmakeconfig.h $output/include/cmakeconfig.h
+# Delete duplicate lines from cmakeconfig.h
+Get-Content $WebKitBuild/cmakeconfig.h | Select-Object -Unique | Set-Content $output/include/cmakeconfig.h
 Copy-Item $WebKitBuild/lib64/JavaScriptCore.lib $output/lib/
 Copy-Item $WebKitBuild/lib64/WTF.lib $output/lib/
 # if ($CMAKE_BUILD_TYPE -eq "Debug") {
