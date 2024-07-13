@@ -169,22 +169,22 @@ jobs:
         include:
           - runner: windows
             build-type: Release
-            static-runtime: 1
+            runtime: static
             arch: amd64
             suffix: ""
           - runner: windows
             build-type: Debug
-            static-runtime: 1
+            runtime: static
             arch: amd64
             suffix: -debug
           - runner: windows
             build-type: Release
-            static-runtime: 0
+            runtime: dynamic
             arch: amd64
             suffix: ""
           - runner: windows
             build-type: Debug
-            static-runtime: 0
+            runtime: dynamic
             arch: amd64
             suffix: -debug
     runs-on: ${{ matrix.runner }}
@@ -214,11 +214,11 @@ jobs:
           $env:WEBKIT_OUTPUT_DIR = "bun-webkit"
           $env:BUN_WEBKIT_VERSION = "${{ github.sha }}"
           $env:CMAKE_BUILD_TYPE = "${{matrix.build-type}}"
-          $env:STATIC_RUNTIME = "${{matrix.static-runtime}}"
+          $env:RUNTIME = "${{matrix.runtime}}"
           ./windows-release.ps1
       - uses: actions/upload-artifact@v3
         with:
-          name: bun-webkit-windows-${{ matrix.arch }}${{ matrix.suffix }}
+          name: bun-webkit-windows-${{matrix.runtime}}-${{ matrix.arch }}${{ matrix.suffix }}
           path: bun-webkit.tar.gz
 
   # release:

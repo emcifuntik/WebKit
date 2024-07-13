@@ -58,7 +58,7 @@ $env:CXX = "clang-cl"
 $output = if ($env:WEBKIT_OUTPUT_DIR) { $env:WEBKIT_OUTPUT_DIR } else { "bun-webkit" }
 $WebKitBuild = if ($env:WEBKIT_BUILD_DIR) { $env:WEBKIT_BUILD_DIR } else { "WebKitBuild" }
 $CMAKE_BUILD_TYPE = if ($env:CMAKE_BUILD_TYPE) { $env:CMAKE_BUILD_TYPE } else { "Release" }
-$STATIC_CRT = if ($env:STATIC_CRT) { $env:STATIC_CRT } else { "0" }
+$STATIC_CRT = if ($env:RUNTIME -eq "static") { "1" } else { "0" }
 $BUN_WEBKIT_VERSION = if ($env:BUN_WEBKIT_VERSION) { $env:BUN_WEBKIT_VERSION } else { $(git rev-parse HEAD) }
 
 # WebKit/JavaScriptCore requires being linked against the dynamic ICU library,
