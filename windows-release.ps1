@@ -159,28 +159,18 @@ if (!(Test-Path -Path $ICU_STATIC_ROOT)) {
     Copy-Item -r $ICU_STATIC_ROOT/source/lib/* $ICU_STATIC_LIBRARY/
 
     # JSC expects the static library to be named icudt.lib
-    if ($STATIC_CRT -eq "1") {
-        if ($CMAKE_BUILD_TYPE -eq "Release") {
-            Move-Item $ICU_STATIC_LIBRARY/sicudt.lib $ICU_STATIC_LIBRARY/icudt.lib
-            Move-Item $ICU_STATIC_LIBRARY/sicutu.lib $ICU_STATIC_LIBRARY/icutu.lib
-            Move-Item $ICU_STATIC_LIBRARY/sicuio.lib $ICU_STATIC_LIBRARY/icuio.lib
-            Move-Item $ICU_STATIC_LIBRARY/sicuin.lib $ICU_STATIC_LIBRARY/icuin.lib
-            Move-Item $ICU_STATIC_LIBRARY/sicuuc.lib $ICU_STATIC_LIBRARY/icuuc.lib
-        } elseif ($CMAKE_BUILD_TYPE -eq "Debug") {
-            Move-Item $ICU_STATIC_LIBRARY/sicudtd.lib $ICU_STATIC_LIBRARY/icudt.lib
-            Move-Item $ICU_STATIC_LIBRARY/sicutud.lib $ICU_STATIC_LIBRARY/icutu.lib
-            Move-Item $ICU_STATIC_LIBRARY/sicuiod.lib $ICU_STATIC_LIBRARY/icuio.lib
-            Move-Item $ICU_STATIC_LIBRARY/sicuind.lib $ICU_STATIC_LIBRARY/icuin.lib
-            Move-Item $ICU_STATIC_LIBRARY/sicuucd.lib $ICU_STATIC_LIBRARY/icuuc.lib
-        }
-    } else {
-        if ($CMAKE_BUILD_TYPE -eq "Debug") {
-            Move-Item $ICU_STATIC_LIBRARY/icudtd.lib $ICU_STATIC_LIBRARY/icudt.lib
-            Move-Item $ICU_STATIC_LIBRARY/icutud.lib $ICU_STATIC_LIBRARY/icutu.lib
-            Move-Item $ICU_STATIC_LIBRARY/icuiod.lib $ICU_STATIC_LIBRARY/icuio.lib
-            Move-Item $ICU_STATIC_LIBRARY/icuind.lib $ICU_STATIC_LIBRARY/icuin.lib
-            Move-Item $ICU_STATIC_LIBRARY/icuucd.lib $ICU_STATIC_LIBRARY/icuuc.lib
-        }
+    if ($CMAKE_BUILD_TYPE -eq "Release") {
+        Move-Item $ICU_STATIC_LIBRARY/sicudt.lib $ICU_STATIC_LIBRARY/icudt.lib
+        Move-Item $ICU_STATIC_LIBRARY/sicutu.lib $ICU_STATIC_LIBRARY/icutu.lib
+        Move-Item $ICU_STATIC_LIBRARY/sicuio.lib $ICU_STATIC_LIBRARY/icuio.lib
+        Move-Item $ICU_STATIC_LIBRARY/sicuin.lib $ICU_STATIC_LIBRARY/icuin.lib
+        Move-Item $ICU_STATIC_LIBRARY/sicuuc.lib $ICU_STATIC_LIBRARY/icuuc.lib
+    } elseif ($CMAKE_BUILD_TYPE -eq "Debug") {
+        Move-Item $ICU_STATIC_LIBRARY/sicudtd.lib $ICU_STATIC_LIBRARY/icudt.lib
+        Move-Item $ICU_STATIC_LIBRARY/sicutud.lib $ICU_STATIC_LIBRARY/icutu.lib
+        Move-Item $ICU_STATIC_LIBRARY/sicuiod.lib $ICU_STATIC_LIBRARY/icuio.lib
+        Move-Item $ICU_STATIC_LIBRARY/sicuind.lib $ICU_STATIC_LIBRARY/icuin.lib
+        Move-Item $ICU_STATIC_LIBRARY/sicuucd.lib $ICU_STATIC_LIBRARY/icuuc.lib
     }
 }
 
@@ -270,28 +260,18 @@ Copy-Item $WebKitBuild/lib64/WTF.lib $output/lib/
 #     Copy-Item $WebKitBuild/lib64/WTF.pdb $output/lib/
 # }
 
-if ($STATIC_CRT -eq "1") {
-    if ($CMAKE_BUILD_TYPE -eq "Release") {
-        Move-Item $ICU_STATIC_LIBRARY/icudt.lib $ICU_STATIC_LIBRARY/sicudt.lib
-        Move-Item $ICU_STATIC_LIBRARY/icutu.lib $ICU_STATIC_LIBRARY/sicutu.lib
-        Move-Item $ICU_STATIC_LIBRARY/icuio.lib $ICU_STATIC_LIBRARY/sicuio.lib
-        Move-Item $ICU_STATIC_LIBRARY/icuin.lib $ICU_STATIC_LIBRARY/sicuin.lib
-        Move-Item $ICU_STATIC_LIBRARY/icuuc.lib $ICU_STATIC_LIBRARY/sicuuc.lib
-    } elseif ($CMAKE_BUILD_TYPE -eq "Debug") {
-        Move-Item $ICU_STATIC_LIBRARY/icudt.lib $ICU_STATIC_LIBRARY/sicudtd.lib
-        Move-Item $ICU_STATIC_LIBRARY/icutu.lib $ICU_STATIC_LIBRARY/sicutud.lib
-        Move-Item $ICU_STATIC_LIBRARY/icuio.lib $ICU_STATIC_LIBRARY/sicuiod.lib
-        Move-Item $ICU_STATIC_LIBRARY/icuin.lib $ICU_STATIC_LIBRARY/sicuind.lib
-        Move-Item $ICU_STATIC_LIBRARY/icuuc.lib $ICU_STATIC_LIBRARY/sicuucd.lib
-    }
-} else {
-    if ($CMAKE_BUILD_TYPE -eq "Debug") {
-        Move-Item $ICU_STATIC_LIBRARY/icudt.lib $ICU_STATIC_LIBRARY/icudtd.lib
-        Move-Item $ICU_STATIC_LIBRARY/icutu.lib $ICU_STATIC_LIBRARY/icutud.lib
-        Move-Item $ICU_STATIC_LIBRARY/icuio.lib $ICU_STATIC_LIBRARY/icuiod.lib
-        Move-Item $ICU_STATIC_LIBRARY/icuin.lib $ICU_STATIC_LIBRARY/icuind.lib
-        Move-Item $ICU_STATIC_LIBRARY/icuuc.lib $ICU_STATIC_LIBRARY/icuucd.lib
-    }
+if ($CMAKE_BUILD_TYPE -eq "Release") {
+    Move-Item $ICU_STATIC_LIBRARY/icudt.lib $ICU_STATIC_LIBRARY/sicudt.lib
+    Move-Item $ICU_STATIC_LIBRARY/icutu.lib $ICU_STATIC_LIBRARY/sicutu.lib
+    Move-Item $ICU_STATIC_LIBRARY/icuio.lib $ICU_STATIC_LIBRARY/sicuio.lib
+    Move-Item $ICU_STATIC_LIBRARY/icuin.lib $ICU_STATIC_LIBRARY/sicuin.lib
+    Move-Item $ICU_STATIC_LIBRARY/icuuc.lib $ICU_STATIC_LIBRARY/sicuuc.lib
+} elseif ($CMAKE_BUILD_TYPE -eq "Debug") {
+    Move-Item $ICU_STATIC_LIBRARY/icudt.lib $ICU_STATIC_LIBRARY/sicudtd.lib
+    Move-Item $ICU_STATIC_LIBRARY/icutu.lib $ICU_STATIC_LIBRARY/sicutud.lib
+    Move-Item $ICU_STATIC_LIBRARY/icuio.lib $ICU_STATIC_LIBRARY/sicuiod.lib
+    Move-Item $ICU_STATIC_LIBRARY/icuin.lib $ICU_STATIC_LIBRARY/sicuind.lib
+    Move-Item $ICU_STATIC_LIBRARY/icuuc.lib $ICU_STATIC_LIBRARY/sicuucd.lib
 }
 
 Add-Content -Path $output/include/cmakeconfig.h -Value "`#define BUN_WEBKIT_VERSION `"$BUN_WEBKIT_VERSION`""
